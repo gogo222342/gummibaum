@@ -38,11 +38,19 @@ public class MainActivity extends AppCompatActivity {
 
     Socket verbindung;
 
-    static EditText ip;
-    static EditText nachricht;
-    static TextView chat;
-    static Button senden;
-    static Button connect;
+    EditText ip;
+    EditText nachricht;
+    TextView chat;
+    Button senden;
+    Button connect;
+    static TextView toast;
+
+
+    public static void toast(String nachricht) {
+        toast.setText(nachricht);
+    }
+
+
 
 
     @Override
@@ -61,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         chat = (TextView) findViewById(R.id.chat);
         senden = (Button) findViewById(R.id.senden);
         connect = (Button) findViewById(R.id.connect);
+        toast = (TextView) findViewById(R.id.toast);
 
 
         SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
@@ -88,20 +97,26 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             server = new ServerSocket(2330);
                             //Toast.makeText(getApplicationContext(),"wartet auf verbindung", Toast.LENGTH_SHORT).show();
+                            toast("wartet auf verbindung");
                             verbindung = server.accept();
+                            toast("verbindung aufgebaut");
                             //Toast.makeText(getApplicationContext(),"verbindung aufgebaut", Toast.LENGTH_SHORT).show();
                         } catch (IOException e) {
+                            toast("verbindung fehlgeschlagen");
                             e.printStackTrace();
                             //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
                         }
 
                     } else {
+                        toast("verbindet...");
                         //Toast.makeText(getApplicationContext(),"verbindet...", Toast.LENGTH_SHORT).show();
                         try {
                             verbindung = new Socket(ip.getText().toString(),2330);
+                            toast("verbunden");
                             //Toast.makeText(getApplicationContext(),"verbunden", Toast.LENGTH_SHORT).show();
                         } catch (IOException e) {
                             e.printStackTrace();
+                            toast("verbindung fehlgeschlagen");
                             //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
                         }
 
@@ -116,10 +131,14 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     DataOutputStream dos = null;
                     try {
+                        toast("sendet");
                         dos = new DataOutputStream(verbindung.getOutputStream());
                         dos.writeUTF(nachricht.getText().toString());
+                        dos.flush();
+                        toast("gesendet");
                     } catch (IOException e) {
                         e.printStackTrace();
+                        toast("senden fehlgeschlagen");
                     }
                 }
             }.start();
@@ -134,8 +153,10 @@ public class MainActivity extends AppCompatActivity {
                             DataInputStream dis = new DataInputStream(verbindung.getInputStream());
                             String empfangen = new String(dis.readUTF());
                             chat.setText(empfangen);
+                            toast("nachricht empfangen");
                         } catch (IOException e) {
                             e.printStackTrace();
+                            toast("nachricht konnte nicht empfangen werden");
                         }
                     }
                 }
