@@ -1,11 +1,13 @@
 package de.gogo.gummibaum;
 
+import android.os.Build;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.annotation.RequiresApi;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -64,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(R.layout.fragment_main);
-        // ip = 192.168.178.40
+        // ip = 192.168.188.40
 
 
         Toast.makeText(getApplicationContext(),"test", Toast.LENGTH_LONG).show();
@@ -150,12 +152,14 @@ public class MainActivity extends AppCompatActivity {
         });
 
         new Thread() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void run() {
                 while (verbindung == null) {
 
                 }
                 DataInputStream dis = null;
+                String verlauf = "";
                 try {
                     dis = new DataInputStream(verbindung.getInputStream());
                 } catch (IOException e) {
@@ -166,10 +170,12 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         if (dis.available() > 0) {
                             String empfangen = dis.readUTF();
+                            verlauf = String.join(verlauf,"\n",empfangen);
+                            String finalVerlauf = verlauf;
                             new Handler(Looper.getMainLooper()).post(new Runnable () {
                                 @Override
                                 public void run () {
-                                    chat.setText(empfangen);
+                                    chat.setText(finalVerlauf);
                                 }
                             });
                             toast("nachricht empfangen");
