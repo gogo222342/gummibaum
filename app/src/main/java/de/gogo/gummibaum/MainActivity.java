@@ -9,6 +9,8 @@ import com.google.android.material.tabs.TabLayout;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,15 +36,26 @@ public class MainActivity extends AppCompatActivity {
 
     ActivityMainBinding binding;
 
-    boolean verbunden = false;
-
     Socket verbindung;
 
-    static EditText ip;
-    static EditText nachricht;
-    static TextView chat;
-    static Button senden;
-    static Button connect;
+    EditText ip;
+    EditText nachricht;
+    TextView chat;
+    Button senden;
+    Button connect;
+    static TextView toast;
+
+
+    public static void toast(String nachricht) {
+        new Handler(Looper.getMainLooper()).post(new Runnable () {
+            @Override
+            public void run () {
+                toast.setText(nachricht);
+            }
+        });
+    }
+
+
 
 
     @Override
@@ -51,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(R.layout.fragment_main);
-
+        // ip = 192.168.178.40
 
 
         Toast.makeText(getApplicationContext(),"test", Toast.LENGTH_LONG).show();
@@ -61,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         chat = (TextView) findViewById(R.id.chat);
         senden = (Button) findViewById(R.id.senden);
         connect = (Button) findViewById(R.id.connect);
+        toast = (TextView) findViewById(R.id.toast);
 
 
         SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
@@ -88,20 +102,26 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             server = new ServerSocket(2330);
                             //Toast.makeText(getApplicationContext(),"wartet auf verbindung", Toast.LENGTH_SHORT).show();
+                            toast("wartet auf verbindung");
                             verbindung = server.accept();
+                            toast("verbindung aufgebaut");
                             //Toast.makeText(getApplicationContext(),"verbindung aufgebaut", Toast.LENGTH_SHORT).show();
                         } catch (IOException e) {
+                            toast("verbindung fehlgeschlagen");
                             e.printStackTrace();
                             //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
                         }
 
                     } else {
+                        toast("verbindet...");
                         //Toast.makeText(getApplicationContext(),"verbindet...", Toast.LENGTH_SHORT).show();
                         try {
                             verbindung = new Socket(ip.getText().toString(),2330);
+                            toast("verbunden");
                             //Toast.makeText(getApplicationContext(),"verbunden", Toast.LENGTH_SHORT).show();
                         } catch (IOException e) {
                             e.printStackTrace();
+                            toast("verbindung fehlgeschlagen");
                             //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
                         }
 
@@ -114,12 +134,16 @@ public class MainActivity extends AppCompatActivity {
             new Thread(){
                 @Override
                 public void run() {
-                    DataOutputStream dos = null;
+                    DataOutputStream dos;
                     try {
+                        toast("sendet");
                         dos = new DataOutputStream(verbindung.getOutputStream());
                         dos.writeUTF(nachricht.getText().toString());
+                        dos.flush();
+                        toast("gesendet");
                     } catch (IOException e) {
                         e.printStackTrace();
+                        toast("senden fehlgeschlagen");
                     }
                 }
             }.start();
@@ -128,15 +152,31 @@ public class MainActivity extends AppCompatActivity {
         new Thread() {
             @Override
             public void run() {
+                while (verbindung == null) {
+
+                }
+                DataInputStream dis = null;
+                try {
+                    dis = new DataInputStream(verbindung.getInputStream());
+                } catch (IOException e) {
+                    toast("inputstream kaputt \uD83D\uDE29");
+                    e.printStackTrace();
+                }
                 while (true) {
-                    if (verbunden) {
-                        try {
-                            DataInputStream dis = new DataInputStream(verbindung.getInputStream());
-                            String empfangen = new String(dis.readUTF());
-                            chat.setText(empfangen);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                    try {
+                        if (dis.available() > 0) {
+                            String empfangen = dis.readUTF();
+                            new Handler(Looper.getMainLooper()).post(new Runnable () {
+                                @Override
+                                public void run () {
+                                    chat.setText(empfangen);
+                                }
+                            });
+                            toast("nachricht empfangen");
                         }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        toast("nachricht konnte nicht empfangen werden");
                     }
                 }
             }
