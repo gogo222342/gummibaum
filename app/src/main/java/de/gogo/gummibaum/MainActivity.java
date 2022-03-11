@@ -117,16 +117,20 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         toast("verbindet...");
                         //Toast.makeText(getApplicationContext(),"verbindet...", Toast.LENGTH_SHORT).show();
-                        try {
-                            verbindung = new Socket(ip.getText().toString(),2330);
-                            toast("verbunden");
-                            //Toast.makeText(getApplicationContext(),"verbunden", Toast.LENGTH_SHORT).show();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            toast("verbindung fehlgeschlagen");
-                            //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
+                        int versuche = 0;
+                        while (true) {
+                            try {
+                                verbindung = new Socket(ip.getText().toString(),2330);
+                                toast("verbunden");
+                                //Toast.makeText(getApplicationContext(),"verbunden", Toast.LENGTH_SHORT).show();
+                                break;
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                versuche++;
+                                toast("verbindung fehlgeschlagen ("+versuche+")");
+                                //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
+                            }
                         }
-
                     }
                 }
             }.start();
@@ -170,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         if (dis.available() > 0) {
                             String empfangen = dis.readUTF();
-                            verlauf = String.join(verlauf,"\n",empfangen);
+                            verlauf = verlauf + "\n" +empfangen;
                             String finalVerlauf = verlauf;
                             new Handler(Looper.getMainLooper()).post(new Runnable () {
                                 @Override
