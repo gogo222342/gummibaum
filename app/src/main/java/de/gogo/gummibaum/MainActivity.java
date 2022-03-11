@@ -9,6 +9,8 @@ import com.google.android.material.tabs.TabLayout;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,8 +36,6 @@ public class MainActivity extends AppCompatActivity {
 
     ActivityMainBinding binding;
 
-    boolean verbunden = false;
-
     Socket verbindung;
 
     EditText ip;
@@ -47,7 +47,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     public static void toast(String nachricht) {
-        toast.setText(nachricht);
+        new Handler(Looper.getMainLooper()).post(new Runnable () {
+            @Override
+            public void run () {
+                toast.setText(nachricht);
+            }
+        });
     }
 
 
@@ -59,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(R.layout.fragment_main);
-
+        // ip = 192.168.178.40
 
 
         Toast.makeText(getApplicationContext(),"test", Toast.LENGTH_LONG).show();
@@ -129,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
             new Thread(){
                 @Override
                 public void run() {
-                    DataOutputStream dos = null;
+                    DataOutputStream dos;
                     try {
                         toast("sendet");
                         dos = new DataOutputStream(verbindung.getOutputStream());
@@ -147,17 +152,31 @@ public class MainActivity extends AppCompatActivity {
         new Thread() {
             @Override
             public void run() {
+                while (verbindung == null) {
+
+                }
+                DataInputStream dis = null;
+                try {
+                    dis = new DataInputStream(verbindung.getInputStream());
+                } catch (IOException e) {
+                    toast("inputstream kaputt \uD83D\uDE29");
+                    e.printStackTrace();
+                }
                 while (true) {
-                    if (verbunden) {
-                        try {
-                            DataInputStream dis = new DataInputStream(verbindung.getInputStream());
-                            String empfangen = new String(dis.readUTF());
-                            chat.setText(empfangen);
+                    try {
+                        if (dis.available() > 0) {
+                            String empfangen = dis.readUTF();
+                            new Handler(Looper.getMainLooper()).post(new Runnable () {
+                                @Override
+                                public void run () {
+                                    chat.setText(empfangen);
+                                }
+                            });
                             toast("nachricht empfangen");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            toast("nachricht konnte nicht empfangen werden");
                         }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        toast("nachricht konnte nicht empfangen werden");
                     }
                 }
             }
