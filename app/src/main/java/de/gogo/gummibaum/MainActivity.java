@@ -107,64 +107,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        connect.setOnClickListener(view -> {
-            new Thread() {
-                @Override
-                public void run() {
-                    if (ip.getText().toString().equals("")) {
-                        ServerSocket server = null;
-
-                        try {
-                            server = new ServerSocket(2330);
-                            //Toast.makeText(getApplicationContext(),"wartet auf verbindung", Toast.LENGTH_SHORT).show();
-                            toast("wartet auf verbindung");
-                            verbindung = server.accept();
-                            toast("verbindung aufgebaut");
-                            //Toast.makeText(getApplicationContext(),"verbindung aufgebaut", Toast.LENGTH_SHORT).show();
-                        } catch (IOException e) {
-                            toast("verbindung fehlgeschlagen");
-                            e.printStackTrace();
-                            //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
-                        }
-
-                    } else {
-                        toast("verbindet...");
-                        //Toast.makeText(getApplicationContext(),"verbindet...", Toast.LENGTH_SHORT).show();
-                        try {
-                            String[] port = ip.getText().toString().split(":");
-                            verbindung = new Socket(ip.getText().toString(),Integer.parseInt(port[1]));
-                            toast("verbunden");
-                            //Toast.makeText(getApplicationContext(),"verbunden", Toast.LENGTH_SHORT).show();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            toast("verbindung fehlgeschlagen");
-                            //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
-                        }
-
-                    }
-                }
-            }.start();
-        });
-
-        senden.setOnClickListener(view -> {
-            new Thread(){
-                @Override
-                public void run() {
-                    DataOutputStream dos;
-                    try {
-                        toast("sendet");
-                        dos = new DataOutputStream(verbindung.getOutputStream());
-                        dos.writeUTF(nachricht.getText().toString());
-                        dos.flush();
-                        toast("gesendet");
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        toast("senden fehlgeschlagen");
-                    }
-                }
-            }.start();
-        });
-
         new Thread() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
@@ -202,4 +144,60 @@ public class MainActivity extends AppCompatActivity {
             }
         }.start();
     }
+    public void connect(View view) {
+        new Thread() {
+            @Override
+            public void run() {
+                if (ip.getText().toString().equals("")) {
+                    ServerSocket server = null;
+
+                    try {
+                        server = new ServerSocket(2330);
+                        //Toast.makeText(getApplicationContext(),"wartet auf verbindung", Toast.LENGTH_SHORT).show();
+                        toast("wartet auf verbindung");
+                        verbindung = server.accept();
+                        toast("verbindung aufgebaut");
+                        //Toast.makeText(getApplicationContext(),"verbindung aufgebaut", Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        toast("verbindung fehlgeschlagen");
+                        e.printStackTrace();
+                        //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
+                    }
+
+                } else {
+                    toast("verbindet...");
+                    //Toast.makeText(getApplicationContext(),"verbindet...", Toast.LENGTH_SHORT).show();
+                    try {
+                        String[] port = ip.getText().toString().split(":");
+                        verbindung = new Socket(ip.getText().toString(),Integer.parseInt(port[1]));
+                        toast("verbunden");
+                        //Toast.makeText(getApplicationContext(),"verbunden", Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        toast("verbindung fehlgeschlagen");
+                        //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+            }
+        }.start();
+    };
+    public void senden(View view) {
+        new Thread(){
+            @Override
+            public void run() {
+                DataOutputStream dos;
+                try {
+                    toast("sendet");
+                    dos = new DataOutputStream(verbindung.getOutputStream());
+                    dos.writeUTF(nachricht.getText().toString());
+                    dos.flush();
+                    toast("gesendet");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    toast("senden fehlgeschlagen");
+                }
+            }
+        }.start();
+    };
 }
