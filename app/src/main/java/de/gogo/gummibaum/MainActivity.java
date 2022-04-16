@@ -1,5 +1,8 @@
 package de.gogo.gummibaum;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.media.AudioRecord;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -8,6 +11,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -46,18 +50,17 @@ public class MainActivity extends AppCompatActivity {
     Button senden;
     Button connect;
     static TextView toast;
+    AudioRecord ton;
 
 
     public static void toast(String nachricht) {
-        new Handler(Looper.getMainLooper()).post(new Runnable () {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
-            public void run () {
+            public void run() {
                 toast.setText(nachricht);
             }
         });
     }
-
-
 
 
     @Override
@@ -69,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         // ip = 192.168.188.40
 
 
-        Toast.makeText(getApplicationContext(),"test", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "test", Toast.LENGTH_LONG).show();
 
         ip = (EditText) findViewById(R.id.ip);
         nachricht = (EditText) findViewById(R.id.nachricht);
@@ -77,6 +80,16 @@ public class MainActivity extends AppCompatActivity {
         senden = (Button) findViewById(R.id.senden);
         connect = (Button) findViewById(R.id.connect);
         toast = (TextView) findViewById(R.id.toast);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
 
 
         SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
@@ -117,20 +130,17 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         toast("verbindet...");
                         //Toast.makeText(getApplicationContext(),"verbindet...", Toast.LENGTH_SHORT).show();
-                        int versuche = 0;
-                        while (true) {
-                            try {
-                                verbindung = new Socket(ip.getText().toString(),2330);
-                                toast("verbunden");
-                                //Toast.makeText(getApplicationContext(),"verbunden", Toast.LENGTH_SHORT).show();
-                                break;
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                versuche++;
-                                toast("verbindung fehlgeschlagen ("+versuche+")");
-                                //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
-                            }
+                        try {
+                            String[] port = ip.getText().toString().split(":");
+                            verbindung = new Socket(ip.getText().toString(),Integer.parseInt(port[1]));
+                            toast("verbunden");
+                            //Toast.makeText(getApplicationContext(),"verbunden", Toast.LENGTH_SHORT).show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            toast("verbindung fehlgeschlagen");
+                            //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
                         }
+
                     }
                 }
             }.start();
@@ -174,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         if (dis.available() > 0) {
                             String empfangen = dis.readUTF();
-                            verlauf = verlauf + "\n" +empfangen;
+                            verlauf = String.join(verlauf,"\n",empfangen);
                             String finalVerlauf = verlauf;
                             new Handler(Looper.getMainLooper()).post(new Runnable () {
                                 @Override
