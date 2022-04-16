@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                         //Toast.makeText(getApplicationContext(),"verbunden", Toast.LENGTH_SHORT).show();
                     } catch (IOException e) {
                         e.printStackTrace();
-                        toast("verbindung fehlgeschlagen");
+                        toast(e.getMessage());
                         //Toast.makeText(getApplicationContext(),"verbindung fehlgeschlagen", Toast.LENGTH_SHORT).show();
                     }
 
